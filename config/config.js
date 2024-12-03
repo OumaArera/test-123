@@ -1,4 +1,4 @@
-require('dotenv').config(); 
+require('dotenv').config();
 
 module.exports = {
   development: {
@@ -8,10 +8,11 @@ module.exports = {
     host: process.env.DB_HOST,
     dialect: 'postgres',
     port: process.env.DB_PORT,
+    ssl: true,
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false 
+        rejectUnauthorized: true
       }
     }
   },
@@ -22,10 +23,11 @@ module.exports = {
     host: process.env.DB_HOST,
     dialect: 'postgres',
     port: process.env.DB_PORT,
+    ssl: true,
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
+        rejectUnauthorized: true
       }
     }
   },
@@ -36,10 +38,11 @@ module.exports = {
     host: process.env.DB_HOST,
     dialect: 'postgres',
     port: process.env.DB_PORT,
+    ssl: true,
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
+        rejectUnauthorized: true
       }
     }
   }
