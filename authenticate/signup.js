@@ -18,11 +18,10 @@ const validatePassword = (password) => {
 };
 
 router.post('/', async (req, res) => {
-  const { iv, ciphertext } = req.body;
+  const { username, password, referredBy } = req.body;
 
-  if (!iv || !ciphertext) {
+  if (!username || !password) {
     return res.status(400).json({
-      error: true,
       success: false,
       message: 'Invalid data. Missing required fields',
       statusCode: 400
@@ -30,25 +29,9 @@ router.post('/', async (req, res) => {
   };
 
   try {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key) {
-      throw new Error('Encryption key not found');
-    }
-
-    const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    });
-    let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    decryptedData = decryptedData.replace(/\0+$/, '');
-
-    const userData = JSON.parse(decryptedData);
-    const { username, password, referredBy } = userData;
 
     if (!username || !validateEmail(username)) {
       return res.status(400).json({
-        error: true,
         success: false,
         message: 'Invalid email format',
         statusCode: 400
@@ -57,7 +40,6 @@ router.post('/', async (req, res) => {
 
     if (!password || !validatePassword(password)) {
       return res.status(400).json({
-        error: true,
         success: false,
         message: 'Password must be at least 6 characters long and contain uppercase, lowercase, number, and special character',
         statusCode: 400
@@ -67,7 +49,6 @@ router.post('/', async (req, res) => {
     if (referredBy) {
       if (!validateEmail(referredBy)) {
         return res.status(400).json({
-          error: true,
           success: false,
           message: 'Invalid referredBy email format',
           statusCode: 400
@@ -77,7 +58,6 @@ router.post('/', async (req, res) => {
       const referee = await db.User.findOne({ where: { username: referredBy } });
       if (!referee) {
         return res.status(400).json({
-          error: true,
           success: false,
           message: 'Referee not found',
           statusCode: 400
@@ -95,8 +75,6 @@ router.post('/', async (req, res) => {
     // Step 2: Concatenate the raw password with the SALTING_KEY
     const saltedPassword = password + saltKey;
 
-    console.log("Salted password: ", saltedPassword);
-
 
     // Step 3: Hash the salted password
     const hashedPassword = await bcrypt.hash(saltedPassword, 10);
@@ -109,26 +87,21 @@ router.post('/', async (req, res) => {
       expiresIn: '1d',
     });
 
-    Object.entries(user).forEach(([key, value]) => console.log(`${key} : ${JSON.stringify(value)}`));
-
     return res.status(201).json({
       accessToken: token,
       success: true,
-      error: false,
       statusCode: 201
     });
   } catch (error) {
     console.error('Error processing signup:', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({
-        error: true,
         success: false,
         message: 'Username already exists',
         statusCode: 409
       });
     }
     return res.status(500).json({
-      error: true,
       success: false,
       message: 'Internal server error',
       statusCode: 500
