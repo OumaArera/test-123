@@ -66,7 +66,7 @@ router.post('/', authenticateToken, async (req, res) => {
         priceWithVat *= 2; 
 
         // Step 4: Check user's balance
-        const account = await db.AccountStructure.findOne({ where: { userId: userId } });
+        const account = await db.AccountStructure.findOne({ where: { userId } });
         if (!account) {
             return res.status(404).json({
                 error: true,

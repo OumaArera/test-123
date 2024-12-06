@@ -5,14 +5,6 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// Middleware to validate incoming data
-const validateRequestBody = (data) => {
-  if (!data || !data.iv || !data.ciphertext) {
-    return { valid: false, message: 'Invalid data. Missing required fields' };
-  }
-
-  return { valid: true };
-};
 
 router.post('/', authenticateToken, async (req, res) => {
   const { balance, eliteResidentialHash, residentialProxiesIDsArray, datacenterProxiesIDsArray } = req.body;
@@ -35,18 +27,6 @@ router.post('/', authenticateToken, async (req, res) => {
       statusCode: 400
     });
   };
-
-
-  // Validate request body
-  const validation = validateRequestBody(req.body);
-  if (!validation.valid) {
-    return res.status(400).json({
-      error: true,
-      success: false,
-      message: validation.message,
-      statusCode: 400
-    });
-  }
 
   try {
 
@@ -76,7 +56,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const invitedBy = user.referredBy || null;
 
     // Insert into AccountStructure table
-    await db.AccountStructure.create({
+    const accountDetails = await db.AccountStructure.create({
       userId,
       balance,
       bitCoinBalance:0,
@@ -90,6 +70,7 @@ router.post('/', authenticateToken, async (req, res) => {
       success: true,
       error: false,
       message: "Data created successfully",
+      accountDetails,
       statusCode: 201
     });
   } catch (error) {

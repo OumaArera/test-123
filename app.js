@@ -31,12 +31,12 @@ app.use("/users/webhook", require("./payments/getCryptomusTransactions"));
 app.use("/users/proxy", require("./proxy/spaceproxy"));
 app.use("/users/prices", require("./proxy/residentialPricing"));
 app.use("/users/elite", require("./proxy/eliteProxy"));
+app.use("/users/add-traffic", require("./proxy/orderElite"));
+app.use("/users/create-order", require("./proxy/orderResidential"));
 app.use("/users/order-proxy", require("./proxy/orderProxy"));
 app.use("/users/create-subuser", require("./subUser/createSubUser"));
 app.use("/users/update-username", require("./subUser/updateUsername"));
 app.use("/users/update-password", require("./subUser/updatePassword"));
-app.use("/users/add-traffic", require("./proxy/orderElite"));
-app.use("/users/create-order", require("./proxy/orderResidential"));
 app.use("/users/forgot-password", require("./authenticate/forgotPassword"));
 app.use("/users/pay-reference", require("./payments/payReferees"));
 
