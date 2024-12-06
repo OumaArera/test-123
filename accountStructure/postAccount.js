@@ -5,7 +5,6 @@ require('dotenv').config();
 
 const router = express.Router();
 
-
 router.post('/', authenticateToken, async (req, res) => {
   const { balance, eliteResidentialHash, residentialProxiesIDsArray, datacenterProxiesIDsArray } = req.body;
 
@@ -29,10 +28,14 @@ router.post('/', authenticateToken, async (req, res) => {
   };
 
   try {
-
     // Validate data types
-    if (!Number.isInteger(userId) || typeof balance !== 'number' || typeof eliteResidentialHash !== 'string' ||
-        !Array.isArray(residentialProxiesIDsArray) || !Array.isArray(datacenterProxiesIDsArray)) {
+    if (
+      !Number.isInteger(userId) ||
+      typeof balance !== 'number' ||
+      typeof eliteResidentialHash !== 'string' ||
+      !Array.isArray(residentialProxiesIDsArray) ||
+      !Array.isArray(datacenterProxiesIDsArray)
+    ) {
       return res.status(400).json({
         error: true,
         success: false,
@@ -59,10 +62,10 @@ router.post('/', authenticateToken, async (req, res) => {
     const accountDetails = await db.AccountStructure.create({
       userId,
       balance,
-      bitCoinBalance:0,
+      bitCoinBalance: 0,
       eliteResidentialHash,
-      residentialProxiesIDsArray: JSON.parse(residentialProxiesIDsArray),
-      datacenterProxiesIDsArray: JSON.parse(datacenterProxiesIDsArray),
+      residentialProxiesIDsArray, // Directly using the array
+      datacenterProxiesIDsArray, // Directly using the array
       invitedBy
     });
 
