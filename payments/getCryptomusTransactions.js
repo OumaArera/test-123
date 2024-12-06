@@ -42,23 +42,10 @@ router.get('/:userId', authenticateToken, async (req, res) => {
       });
     }
 
-    const dataStr = JSON.stringify(account);
-    const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-    const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    }).toString();
-
-    const payload = {
-      iv: iv,
-      ciphertext: encryptedData
-    };
-
     return res.status(200).json({
       success: true,
       error: false,
-      data: payload,
+      data: account,
       statusCode: 200
     });
   } catch (error) {

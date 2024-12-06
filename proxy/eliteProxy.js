@@ -3,9 +3,9 @@ const router = express.Router();
 const authenticateToken = require('../authenticate/authenticateToken');
 
 router.post('/', authenticateToken, (req, res) => {
-  const { iv, ciphertext } = req.body;
+  const { quantity } = req.body;
 
-  if (!iv || !ciphertext) {
+  if (!quantity) {
       return res.status(400).json({
           error: true,
           success: false,
@@ -15,17 +15,6 @@ router.post('/', authenticateToken, (req, res) => {
   };
 
   try {
-    const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    });
-    let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    decryptedData = decryptedData.replace(/\0+$/, '');
-
-    const accountData = JSON.parse(decryptedData);
-    const { quantity } = accountData;
-
     const quantityInt = parseInt(quantity);
 
     if (!Number.isInteger(quantityInt)) {

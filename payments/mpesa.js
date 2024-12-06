@@ -1,12 +1,9 @@
 const express = require('express');
 const db = require('../models');
-const CryptoJS = require('crypto-js');
 const IntaSend = require('intasend-node');
 const authenticateToken = require('../authenticate/authenticateToken');
-const { where } = require('sequelize');
 require('dotenv').config();
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
 const PUBLISHABLE_KEY = process.env.MPESA_PUBLISHABLE_KEY;
 const MPESA_SECRET_KEY = process.env.MPESA_SECRET_KEY;
 const FIRST_NAME = process.env.FIRST_NAME;
@@ -58,9 +55,19 @@ const refereeToken = async (userId, amount) =>{
 };
 
 router.post("/", authenticateToken, async (req, res) => {
-    const { iv, ciphertext } = req.body;
+    const { phoneNumber, amount } = req.body;
 
-    if (!iv || !ciphertext) {
+    const userId = req.user.id; 
+    if (!userId) {
+        return res.status(401).json({
+            error: true,
+            success: false,
+            message: "Unauthorized: Missing user ID in token",
+            statusCode: 401
+        });
+    };
+
+    if (!phoneNumber || !amount) {
         return res.status(400).json({
             error: true,
             success: false,
@@ -70,18 +77,6 @@ router.post("/", authenticateToken, async (req, res) => {
     };
 
     try {
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-            iv: CryptoJS.enc.Hex.parse(iv),
-            padding: CryptoJS.pad.Pkcs7,
-            mode: CryptoJS.mode.CBC
-        });
-
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const accountData = JSON.parse(decryptedData);
-        const { phoneNumber, userId, amount } = accountData;
-
         const user = await db.User.findOne({ where: { id: userId}});
         let refree;
         if (user){

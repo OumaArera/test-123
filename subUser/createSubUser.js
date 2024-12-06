@@ -1,22 +1,29 @@
 const express = require('express');
 const axios = require('axios');
-const CryptoJS = require('crypto-js');
 const { v4: uuidv4 } = require('uuid');
 const authenticateToken = require('../authenticate/authenticateToken');
 const { AccountStructure, SubUsers } = require('../models'); // Adjust the path as needed
 const e = require('express');
-const { where } = require('sequelize');
 require('dotenv').config();
 
 const router = express.Router();
 const API_TOKEN = process.env.PROXY_API_TOKEN;
-const SECRET_KEY = process.env.SECRET_KEY;
 const SUBUSER_URL = 'https://resi-api.iproyal.com/v1/residential-subusers';
 
 router.post('/', authenticateToken, async (req, res) => {
-    const { iv, ciphertext } = req.body;
+    const { quantity } = req.body;
 
-    if (!iv || !ciphertext) {
+    const userId = req.user.id; 
+    if (!userId) {
+        return res.status(401).json({
+            error: true,
+            success: false,
+            message: "Unauthorized: Missing user ID in token",
+            statusCode: 401
+        });
+    }
+
+    if (!quantity) {
         return res.status(400).json({
             error: true,
             success: false,
@@ -26,17 +33,6 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-            iv: CryptoJS.enc.Hex.parse(iv),
-            padding: CryptoJS.pad.Pkcs7,
-            mode: CryptoJS.mode.CBC
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const accountData = JSON.parse(decryptedData);
-        const { quantity, userId } = accountData;
-
         // Validate the decrypted data
         if (!quantity || quantity <= 0) {
             return res.status(400).json({
@@ -56,7 +52,7 @@ router.post('/', authenticateToken, async (req, res) => {
             });
         }
 
-        const user = await db.SubUsers.findOne({ where: { userId: userId } });
+        const user = await db.SubUsers.findOne({ where: { userId } });
 
         if (user){
             res.status(400).json({

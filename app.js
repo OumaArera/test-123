@@ -60,7 +60,7 @@ app.use("/users/update-password", updateSubUserPassword);
 app.use("/users/add-traffic", addTraffic);
 app.use("/users/create-order", createOrder);
 app.use("/users/forgot-password", forgotPassword);
-app.use("/users/pay-refereens", payReferees);
+app.use("/users/pay-reference", payReferees);
 
 
 

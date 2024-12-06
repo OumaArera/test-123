@@ -7,11 +7,20 @@ const router = express.Router();
 const API_TOKEN = process.env.PROXY_API_TOKEN;
 const SUBUSER_URL = 'https://resi-api.iproyal.com/v1/residential-subusers';
 
-router.post('/add-traffic', async (req, res) => {
+router.post('/', async (req, res) => {
+    const { quantity } = req.body;
 
-    const { iv, ciphertext } = req.body;
+    const userId = req.user.id; 
+    if (!userId) {
+        return res.status(401).json({
+            error: true,
+            success: false,
+            message: "Unauthorized: Missing user ID in token",
+            statusCode: 401
+        });
+    };
 
-    if (!iv || !ciphertext) {
+    if (!userId || !quantity) {
         return res.status(400).json({
             error: true,
             success: false,
@@ -21,17 +30,6 @@ router.post('/add-traffic', async (req, res) => {
     };
 
     try {
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-            iv: CryptoJS.enc.Hex.parse(iv),
-            padding: CryptoJS.pad.Pkcs7,
-            mode: CryptoJS.mode.CBC
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const accountData = JSON.parse(decryptedData);
-        const { userId, quantity } = accountData;
-
         const user = await db.SubUsers.findOne({ where: { userId: userId } });
 
         if (!user){

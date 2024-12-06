@@ -1,10 +1,8 @@
 const express = require('express');
-const CryptoJS = require("crypto-js");
 const axios = require("axios");
 const authenticateToken = require('../authenticate/authenticateToken');
 require('dotenv').config();
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
 const PROXY_API_KEY = process.env.SPACE_PROXY_API_KEY;
 const SPACE_PROXY_URL = "https://panel.spaceproxy.net/api/new-order-amount/?api_key";
 
@@ -12,9 +10,9 @@ const router = express.Router();
 
 router.post("/", authenticateToken, async(req, res) => {
     // const { period, country, type, quantity, ipList } = req.body;
-    const {iv, ciphertext} = req.body;
+    const { period, country, type, quantity, ipList } = req.body;
 
-    if (!iv || !ciphertext){
+    if (!period || !country || !type || !quantity || !ipList ){
         return res.status(400).json({
             error: true,
             success: false,
@@ -24,18 +22,6 @@ router.post("/", authenticateToken, async(req, res) => {
     };
 
     try {
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-            iv: CryptoJS.enc.Hex.parse(iv),
-            padding: CryptoJS.pad.Pkcs7,
-            mode: CryptoJS.mode.CBC
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const accountData = JSON.parse(decryptedData);
-        const { period, country, type, quantity, ipList } = accountData;
-
-
         const countries = [
             "ru", "ca", "us", "de", "gb", "nl", "es", "it", "id", "fr", "ch", "pt", 
             "ua", "kz", "cn", "pl", "in", "jp", "ab", "au", "at", "az", "al", "dz", 

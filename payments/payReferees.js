@@ -4,15 +4,14 @@ const db = require('../models');
 
 const router = express.Router();
 
-router.post('/reset-balances', authenticateToken, async (req, res) => {
-    const { iv, ciphertext } = req.body;
-
-    if (!iv || !ciphertext) {
-        return res.status(400).json({
+router.post('/', authenticateToken, async (req, res) => {
+    const userId = req.user.id; 
+    if (!userId) {
+        return res.status(401).json({
             error: true,
             success: false,
-            message: 'Invalid input data, missing required fields',
-            statusCode: 400
+            message: "Unauthorized: Missing user ID in token",
+            statusCode: 401
         });
     };
 

@@ -1,10 +1,8 @@
 const express = require('express');
 const db = require('../models');
-const CryptoJS = require('crypto-js');
 const authenticateToken = require('../authenticate/authenticateToken'); 
 require('dotenv').config();
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
 
 const router = express.Router();
 
@@ -28,19 +26,6 @@ router.get('/', authenticateToken, async (req, res) => {
         statusCode: 404
       });
     }
-
-    const dataStr = JSON.stringify(accounts);
-    const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-    const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    }).toString();
-
-    const payload = {
-      iv: iv,
-      ciphertext: encryptedData
-    };
 
     return res.status(200).json({
       success: true,

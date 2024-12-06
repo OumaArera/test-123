@@ -1,12 +1,10 @@
 const express = require('express');
 const db = require('../models');
-const CryptoJS = require("crypto-js");
 const axios = require("axios");
 const { v4: uuidv4 } = require('uuid'); 
 const authenticateToken = require('../authenticate/authenticateToken');
 require('dotenv').config();
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
 const PROXY_API_KEY = process.env.SPACE_PROXY_API_KEY;
 const SPACE_PROXY_URL = "https://panel.spaceproxy.net/api/new-order-amount/?api_key";
 const NEW_ORDER_URL = "https://panel.spaceproxy.net/api/new-order/?api_key";
@@ -14,9 +12,19 @@ const NEW_ORDER_URL = "https://panel.spaceproxy.net/api/new-order/?api_key";
 const router = express.Router();
 
 router.post("/", authenticateToken, async (req, res) => {
-    const { iv, ciphertext, userId } = req.body;
+    const { period, country, type, quantity, ipList } = req.body;
 
-    if (!iv || !ciphertext || !userId) {
+    const userId = req.user.id; 
+    if (!userId) {
+        return res.status(401).json({
+            error: true,
+            success: false,
+            message: "Unauthorized: Missing user ID in token",
+            statusCode: 401
+        });
+    }
+
+    if (!period || !country || !type || !quantity || !ipList) {
         return res.status(400).json({
             error: true,
             success: false,
@@ -26,17 +34,6 @@ router.post("/", authenticateToken, async (req, res) => {
     }
 
     try {
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-            iv: CryptoJS.enc.Hex.parse(iv),
-            padding: CryptoJS.pad.Pkcs7,
-            mode: CryptoJS.mode.CBC
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const accountData = JSON.parse(decryptedData);
-        const { period, country, type, quantity, ipList } = accountData;
-
         const validCountries = [
             "ru", "ca", "us", "de", "gb", "nl", "es", "it", "id", "fr", "ch", "pt", 
             "ua", "kz", "cn", "pl", "in", "jp", "ab", "au", "at", "az", "al", "dz", 
@@ -139,25 +136,12 @@ router.post("/", authenticateToken, async (req, res) => {
 
         await db.Orders.create(orderDetails);
 
-      
-        const dataStr = JSON.stringify(orderDetails);
-        const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-        const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC
-        }).toString();
-
-        const payload = {
-        iv: iv,
-        ciphertext: encryptedData
-        };
 
         return res.status(200).json({
             error: false,
             success: true,
             message: "Order processed successfully",
-            payload,
+            data: orderDetails,
             statusCode: 200
         });
 

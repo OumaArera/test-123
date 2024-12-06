@@ -1,6 +1,5 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const CryptoJS = require('crypto-js');
 const db = require('../models');
 require('dotenv').config();
 
@@ -17,9 +16,9 @@ const validatePassword = (password) => {
 };
 
 router.post('/', async (req, res) => {
-  const { iv, ciphertext } = req.body;
+  const { username, password } = req.body;
 
-  if (!iv || !ciphertext) {
+  if (!username || !password) {
     return res.status(400).json({
       error: true,
       success: false,
@@ -29,23 +28,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key) {
-      throw new Error('Encryption key not found');
-    }
-
-    const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    });
-
-    let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    decryptedData = decryptedData.replace(/\0+$/, '');
-
-    const userData = JSON.parse(decryptedData);
-    const { username, password } = userData;
-
+    
     if (!username || !validateEmail(username)) {
       return res.status(400).json({
         error: true,

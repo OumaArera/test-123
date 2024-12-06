@@ -1,6 +1,5 @@
 const express = require('express');
 const db = require('../models');
-const CryptoJS = require('crypto-js');
 const authenticateToken = require('../authenticate/authenticateToken'); 
 require('dotenv').config();
 
@@ -16,7 +15,27 @@ const validateRequestBody = (data) => {
 };
 
 router.post('/', authenticateToken, async (req, res) => {
-  const { iv, ciphertext } = req.body;
+  const { balance, eliteResidentialHash, residentialProxiesIDsArray, datacenterProxiesIDsArray } = req.body;
+
+  const userId = req.user.id; 
+  if (!userId) {
+    return res.status(401).json({
+      error: true,
+      success: false,
+      message: "Unauthorized: Missing user ID in token",
+      statusCode: 401
+    });
+  };
+
+  if (!balance || !eliteResidentialHash || !residentialProxiesIDsArray || !datacenterProxiesIDsArray) {
+    return res.status(401).json({
+      error: true,
+      success: false,
+      message: "Missing required fields.",
+      statusCode: 400
+    });
+  };
+
 
   // Validate request body
   const validation = validateRequestBody(req.body);
@@ -30,24 +49,6 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 
   try {
-    const key = process.env.ENCRYPTION_KEY;
-    if (!key) {
-      throw new Error('Encryption key not found');
-    }
-
-    // Decrypt the data
-    const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-      iv: CryptoJS.enc.Hex.parse(iv),
-      padding: CryptoJS.pad.Pkcs7,
-      mode: CryptoJS.mode.CBC
-    });
-
-    let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    decryptedData = decryptedData.replace(/\0+$/, '');
-
-    // Parse decrypted data
-    const accountData = JSON.parse(decryptedData);
-    const { userId, balance, eliteResidentialHash, residentialProxiesIDsArray, datacenterProxiesIDsArray } = accountData;
 
     // Validate data types
     if (!Number.isInteger(userId) || typeof balance !== 'number' || typeof eliteResidentialHash !== 'string' ||

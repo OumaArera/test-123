@@ -1,10 +1,8 @@
 const express = require('express');
 const db = require('../models');
-const CryptoJS = require('crypto-js');
 const authenticateToken = require('../authenticate/authenticateToken');
 require('dotenv').config();
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
 
 const router = express.Router();
 
@@ -13,9 +11,19 @@ const validateUserId = (userId) => {
 };
 
 
-router.put('/:userId', authenticateToken, async (req, res) => {
-  const userId = parseInt(req.params.userId, 10);
+router.put('/', authenticateToken, async (req, res) => {
 
+  const { newDataCentreId } = req.body;
+
+  const userId = req.user.id; 
+  if (!userId) {
+    return res.status(401).json({
+      error: true,
+      success: false,
+      message: "Unauthorized: Missing user ID in token",
+      statusCode: 401
+    });
+  };
 
   if (!validateUserId(userId)) {
     return res.status(400).json({
@@ -26,33 +34,9 @@ router.put('/:userId', authenticateToken, async (req, res) => {
     });
   }
 
-  const { iv, ciphertext } = req.body;
-
-  if (!iv || !ciphertext) {
-    return res.status(400).json({
-      error: true,
-      success: false,
-      message: 'Invalid input data',
-      statusCode: 400
-    });
-  }
+  
 
   try {
-    const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(SECRET_KEY), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC
-      });
-
-    let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-    decryptedData = decryptedData.replace(/\0+$/, '');
-
-    // Parse decrypted data
-    const accountData = JSON.parse(decryptedData);
-    Object.entries(accountData).forEach(([key, value]) => console.log(`${key} : ${value}`))
-
-    const newDataCentreId = accountData;
-    console.log("New Data centre ID: ", newDataCentreId);
 
     if (!newDataCentreId) {
       return res.status(400).json({
@@ -77,9 +61,7 @@ router.put('/:userId', authenticateToken, async (req, res) => {
     }
 
     let datacenterProxiesIDsArray = JSON.parse(account.datacenterProxiesIDsArray);
-    console.log(`Data Centre array: `, datacenterProxiesIDsArray)
     datacenterProxiesIDsArray.push(newDataCentreId.newDataCentreId);
-    console.log("New array: ", datacenterProxiesIDsArray);
 
     // Persist the changes
     account.datacenterProxiesIDsArray = JSON.stringify(datacenterProxiesIDsArray);
