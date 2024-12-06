@@ -1,29 +1,7 @@
 const express = require('express');
 const db = require('./models');
-const signupRoute = require('./authenticate/signup');
-const signinRoute = require('./authenticate/signin');
-const usersRoute = require('./users/users');
-const removeUsers = require("./users/remove")
-const postAccount = require("./accountStructure/postAccount");
-const getAccount = require("./accountStructure/getAccount");
-const updateDataCentreID = require("./accountStructure/updateDatacentreProxies");
-const updateProxiesID = require("./accountStructure/updateResidentialProxies");
-const mpesaStkPush = require("./payments/mpesa");
-const getMpesaTransactions = require("./payments/getTransaction");
-const cryptoMus = require("./payments/cryptomus");
-const webhook = require("./payments/cryptomusWebhook");
-const getWebhook = require("./payments/getCryptomusTransactions");
-const postProxy = require("./proxy/spaceproxy");
-const getPrices = require("./proxy/residentialPricing");
-const eliteProxy = require("./proxy/eliteProxy")
-const orderProxy = require("./proxy/orderProxy");
-const createSubUser = require("./subUser/createSubUser");
-const updateSubUserUsername = require("./subUser/updateUsername");
-const updateSubUserPassword = require("./subUser/updatePassword");
-const addTraffic = require("./proxy/orderElite");
-const createOrder = require("./proxy/orderResidential");
-const forgotPassword = require("./authenticate/forgotPassword");
-const payReferees = require("./payments/payReferees");
+
+
 const cors = require('cors'); 
 require('dotenv').config();
 
@@ -37,30 +15,30 @@ app.use(cors());
 app.use(express.json());
 
 // Define routes
-app.use('/users/signup', signupRoute);
-app.use('/users/login', signinRoute);
-app.use('/users', usersRoute);
-app.use("/users/remove", removeUsers);
-app.use("/users/account", postAccount);
-app.use("/users/account", getAccount);
-app.use("/users/update-proxy", updateProxiesID);
-app.use("/users/update-datacentre", updateDataCentreID);
-app.use("/users/mpesa", mpesaStkPush)
-app.use("/users/mpesa", getMpesaTransactions)
-app.use("/users/cryptomus", cryptoMus);
-app.use("/users/callback", webhook);
-app.use("/users/webhook", getWebhook);
-app.use("/users/proxy", postProxy);
-app.use("/users/prices", getPrices);
-app.use("/users/elite", eliteProxy);
-app.use("/users/order-proxy", orderProxy);
-app.use("/users/create-subuser", createSubUser);
-app.use("/users/update-username", updateSubUserUsername);
-app.use("/users/update-password", updateSubUserPassword);
-app.use("/users/add-traffic", addTraffic);
-app.use("/users/create-order", createOrder);
-app.use("/users/forgot-password", forgotPassword);
-app.use("/users/pay-reference", payReferees);
+app.use('/users/signup', require('./authenticate/signup'));
+app.use('/users/login', require('./authenticate/signin'));
+app.use('/users/users', require('./users/users'));
+app.use("/users/remove", require("./users/remove"));
+app.use("/users/account", require("./accountStructure/postAccount"));
+app.use("/users/account", require("./accountStructure/getAccount"));
+app.use("/users/update-proxy", require("./accountStructure/updateResidentialProxies"));
+app.use("/users/update-datacentre", require("./accountStructure/updateDatacentreProxies"));
+app.use("/users/mpesa", require("./payments/mpesa"))
+app.use("/users/mpesa", require("./payments/getTransaction"))
+app.use("/users/cryptomus", require("./payments/cryptomus"));
+app.use("/users/callback", require("./payments/cryptomusWebhook"));
+app.use("/users/webhook", require("./payments/getCryptomusTransactions"));
+app.use("/users/proxy", require("./proxy/spaceproxy"));
+app.use("/users/prices", require("./proxy/residentialPricing"));
+app.use("/users/elite", require("./proxy/eliteProxy"));
+app.use("/users/order-proxy", require("./proxy/orderProxy"));
+app.use("/users/create-subuser", require("./subUser/createSubUser"));
+app.use("/users/update-username", require("./subUser/updateUsername"));
+app.use("/users/update-password", require("./subUser/updatePassword"));
+app.use("/users/add-traffic", require("./proxy/orderElite"));
+app.use("/users/create-order", require("./proxy/orderResidential"));
+app.use("/users/forgot-password", require("./authenticate/forgotPassword"));
+app.use("/users/pay-reference", require("./payments/payReferees"));
 
 
 

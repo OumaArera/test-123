@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
         });
     };
 
-    if (!userId || !quantity) {
+    if (!quantity) {
         return res.status(400).json({
             error: true,
             success: false,
