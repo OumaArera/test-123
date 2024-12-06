@@ -1,16 +1,17 @@
 const express = require('express');
 const axios = require('axios');
 const db = require('../models');
+const authenticateToken = require('../authenticate/authenticateToken');
 require('dotenv').config();
 
 const router = express.Router();
 const API_TOKEN = process.env.PROXY_API_TOKEN;
 const SUBUSER_URL = 'https://resi-api.iproyal.com/v1/residential-subusers';
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const { quantity } = req.body;
 
-    const userId = req.user.id; 
+    const userId = req.user.id;
     if (!userId) {
         return res.status(401).json({
             error: true,
@@ -18,7 +19,7 @@ router.post('/', async (req, res) => {
             message: "Unauthorized: Missing user ID in token",
             statusCode: 401
         });
-    };
+    }
 
     if (!quantity) {
         return res.status(400).json({
@@ -27,24 +28,33 @@ router.post('/', async (req, res) => {
             message: "Missing required fields",
             statusCode: 400
         });
-    };
+    }
 
     try {
-        const user = await db.SubUsers.findOne({ where: { userId: userId } });
-
-        if (!user){
-            res.status(404).json({
+        // Retrieve the sub-user account
+        const user = await db.SubUsers.findOne({ where: { userId } });
+        if (!user) {
+            return res.status(404).json({
                 error: true,
                 success: false,
-                message: "You don't have a sub user account",
+                message: "You don't have a sub-user account",
                 statusCode: 404
             });
-        };
-        const hash = user.hash;
+        }
+        const hash = user.hash || null;
 
-        // Query the user's account in the AccountStructure
+        // Ensure the hash exists
+        if (!hash) {
+            return res.status(400).json({
+                error: true,
+                success: false,
+                message: "Invalid hash for the sub-user account",
+                statusCode: 400
+            });
+        }
+
+        // Retrieve the user's account
         const account = await db.AccountStructure.findOne({ where: { userId } });
-
         if (!account) {
             return res.status(404).json({
                 error: true,
@@ -52,10 +62,12 @@ router.post('/', async (req, res) => {
                 message: 'User not found.',
                 statusCode: 404,
             });
-        };
+        }
 
+        // Calculate total cost
         const totalCost = quantity * 10;
 
+        // Check if balance is sufficient
         if (account.balance < totalCost) {
             return res.status(400).json({
                 error: true,
@@ -63,20 +75,17 @@ router.post('/', async (req, res) => {
                 message: 'Insufficient balance.',
                 statusCode: 400,
             });
-        };
+        }
 
         // Deduct the balance
         account.balance -= totalCost;
-
-        // Save the updated balance
         await account.save();
 
-        // Make the request to add traffic
+        // Make the external API request
         const data = { amount: quantity };
-
         const response = await axios.post(`${SUBUSER_URL}/${hash}/give-traffic`, data, {
             headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
+                Authorization: `Bearer ${API_TOKEN}`,
                 'Content-Type': 'application/json',
             },
         });
@@ -92,23 +101,23 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Error:', error.message);
 
-        // Handle potential errors
+        // Handle potential errors from the external API
         if (error.response) {
-            res.status(error.response.status).json({
+            return res.status(error.response.status).json({
                 error: true,
                 success: false,
                 message: error.response.data || 'Error from external API',
                 statusCode: error.response.status,
             });
         } else if (error.request) {
-            res.status(500).json({
+            return res.status(500).json({
                 error: true,
                 success: false,
                 message: 'No response received from external API',
                 statusCode: 500,
             });
         } else {
-            res.status(500).json({
+            return res.status(500).json({
                 error: true,
                 success: false,
                 message: 'Internal Server Error',

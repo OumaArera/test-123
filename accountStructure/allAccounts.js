@@ -6,11 +6,6 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// Middleware to validate incoming data
-const validateUserId = (userId) => {
-  return Number.isInteger(userId);
-};
-
 router.get('/', authenticateToken, async (req, res) => {
   
 
