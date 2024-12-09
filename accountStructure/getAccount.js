@@ -34,7 +34,6 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Fetch account structure for the given userId
     const account = await db.AccountStructure.findOne({
       where: { userId },
       attributes: ['userId', 'balance', 'eliteResidentialHash', 'residentialProxiesIDsArray', 'datacenterProxiesIDsArray', 'invitedBy']
