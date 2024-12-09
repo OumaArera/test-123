@@ -64,8 +64,8 @@ router.post('/', authenticateToken, async (req, res) => {
       balance,
       bitCoinBalance: 0,
       eliteResidentialHash,
-      residentialProxiesIDsArray, // Directly using the array
-      datacenterProxiesIDsArray, // Directly using the array
+      residentialProxiesIDsArray, 
+      datacenterProxiesIDsArray, 
       invitedBy
     });
 

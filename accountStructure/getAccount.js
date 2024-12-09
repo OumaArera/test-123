@@ -11,7 +11,7 @@ const validateUserId = (userId) => {
   return Number.isInteger(userId);
 };
 
-router.get('/:userId', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
 
   const userId = req.user.id; 
   if (!userId) {

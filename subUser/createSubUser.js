@@ -87,8 +87,8 @@ router.post('/', authenticateToken, async (req, res) => {
         };
 
         // Generate a unique username and a random password
-        const username = `user_${uuidv4()}`.split('-')[0]; // Example: user_1234abcd
-        const password = Math.random().toString(36).slice(-8); // Example: 4bT1o2Pk
+        const username = `user_${uuidv4()}`.split('-')[0]; 
+        const password = Math.random().toString(36).slice(-8); 
 
         const data = {
             username: username,
