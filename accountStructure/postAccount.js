@@ -11,7 +11,6 @@ router.post('/', authenticateToken, async (req, res) => {
   const userId = req.user.id; 
   if (!userId) {
     return res.status(401).json({
-      error: true,
       success: false,
       message: "Unauthorized: Missing user ID in token",
       statusCode: 401
@@ -20,7 +19,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
   if (!balance || !eliteResidentialHash || !residentialProxiesIDsArray || !datacenterProxiesIDsArray) {
     return res.status(401).json({
-      error: true,
       success: false,
       message: "Missing required fields.",
       statusCode: 400
@@ -37,7 +35,6 @@ router.post('/', authenticateToken, async (req, res) => {
       !Array.isArray(datacenterProxiesIDsArray)
     ) {
       return res.status(400).json({
-        error: true,
         success: false,
         message: 'Invalid data types',
         statusCode: 400
@@ -48,7 +45,6 @@ router.post('/', authenticateToken, async (req, res) => {
     const user = await db.User.findByPk(userId);
     if (!user) {
       return res.status(404).json({
-        error: true,
         success: false,
         message: 'User not found',
         statusCode: 404
@@ -71,15 +67,13 @@ router.post('/', authenticateToken, async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      error: false,
       message: "Data created successfully",
-      accountDetails,
+      data: accountDetails,
       statusCode: 201
     });
   } catch (error) {
     console.error('Error processing postAccount:', error);
     return res.status(500).json({
-      error: true,
       success: false,
       message: 'Internal server error',
       statusCode: 500
